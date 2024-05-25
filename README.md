@@ -2,7 +2,7 @@
 
 An employee time clock application created using Flask.
 
-**NOTICE**: This software is intended as a demonstration and is not suited for a production environment. Certain functionality, including important security features, is planned but has not yet been implemented.
+**NOTICE**: This software is intended as a demonstration and is not suited for a production environment. Certain functionality, including important security features, is planned but has not yet been implemented. Unimplemented or unfinished features either will have limited functionality, or will not function.
 
 ## Features
 - User authentication and time tracking
