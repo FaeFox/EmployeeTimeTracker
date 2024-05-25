@@ -9,7 +9,7 @@ An employee time clock application created using Flask.
 - Administrative capabilities with modification tracking
 - Easy-to-use web interface
 
-## Installation
+## Installation (Requires Python 3.8 or newer)
 1. Clone the repository:
    ```bash
    git clone https://github.com/FaeFox/EmployeeTimeTracker.git
