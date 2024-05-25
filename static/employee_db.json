@@ -1,0 +1,7 @@
+{
+    "1234": {
+        "name": "Admin",
+        "password": "1234",
+        "isAdmin": true
+    }
+}

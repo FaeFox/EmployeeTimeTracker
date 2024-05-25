@@ -1,0 +1,48 @@
+{% extends 'base_template.html' %}
+{% block title %}Homepage{% endblock %}
+
+
+{% block scripts %}
+<script type="module" src="{{ url_for('static', filename='js/socketClient.js') }}"></script>
+<script type="module" src="{{ url_for('static', filename='js/clockInPage.js') }}"></script>
+{% endblock %}
+
+{% block content %}
+<!-- Dak mode toggle -->
+<h1 class="mt-5 pb-3">
+  {{ session['username'] }} employee dashboard
+</h1>
+<form id="clockInOutForm">
+  <!-- Aggiungi gli input necessari -->
+  <input type="hidden" id="username" name="username" value="{{ session['username'] }}" />
+  <input type="hidden" id="employee_id" name="employee_id" value="{{ session['user_id'] }}" />
+  <button type="button" class="btn btn-primary mb-5 clockInOutButton">
+    Clock In/Out
+  </button>
+</form>
+<div class="d-flex">
+
+  <div class="d-inline-block"><i class="bi bi-clock-history">&nbsp;</i></div>
+  <div class="h5 d-inline-block">
+    <h5 class="mb-5">Clock In/Out History</h2>
+  </div>
+</div>
+
+<div class="col-md-10">
+  <!-- DataTable to display employee clock-in/out records -->
+  <table id="employeeRecords" class="table table-hover">
+    <thead>
+      <tr>
+        <th>Clock In</th>
+        <th>Clock Out</th>
+        <th>Hours worked</th>
+        <th class="no-export">Expand/Collapse day</th>
+        <!-- Nuova colonna -->
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Table body content will be populated dynamically -->
+    </tbody>
+  </table>
+</div>
+{% endblock %}
