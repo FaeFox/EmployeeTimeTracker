@@ -150,6 +150,24 @@ function startEmployeeCheckin() {
 
 }
 
+function verifyAdminPassword(password) {
+    const employee_name = document.getElementById("username").value;
+    return fetch('/admin/verify-admin-password', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                username: employee_name,
+                password: password
+            }) // Use actual admin username
+        })
+        .then(response => response.json())
+        .then(data => data.isValid);
+}
+
+
+// password logic removed, only employee ID will be checked
 document.addEventListener('DOMContentLoaded', function() {
     const loginForm = document.getElementById('loginForm');
 
@@ -157,10 +175,10 @@ document.addEventListener('DOMContentLoaded', function() {
         event.preventDefault();
 
         const usernameInput = document.getElementById('username');
-        const passwordInput = document.getElementById('password');
+        //const passwordInput = document.getElementById('password');
 
         // Check if the form fields are filled
-        if (usernameInput.value === '' || passwordInput.value === '') {
+        if (usernameInput.value === '') {// || passwordInput.value === '') {
             showToast('error', 'Please fill in all fields.');
             return;
         }
@@ -170,7 +188,7 @@ document.addEventListener('DOMContentLoaded', function() {
             type: 'POST',
             data: {
                 username: usernameInput.value,
-                password: passwordInput.value
+                password: null//passwordInput.value
             },
             success: function(response) {
                 // We logged in!

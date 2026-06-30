@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Employee Hours Report</title>
+<style>
+body{
+    font-family:"Segoe UI",Arial,sans-serif;
+    margin:40px;
+    color:#222;
+}
+/* HEADER */
+.report-header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    border-bottom:2px solid #444;
+    padding-bottom:10px;
+}
+.logo{
+    display:flex;
+    align-items:center;
+    gap:12px;
+}
+.logo img{
+    height:42px;
+}
+.report-title{
+    font-size:24px;
+    font-weight:600;
+}
+/* META INFO */
+.report-meta{
+    display:flex;
+    justify-content:space-between;
+    margin-top:15px;
+    padding-bottom:15px;
+    border-bottom:1px solid #ddd;
+    font-size:14px;
+}
+/* TABLE */
+table{
+    width:100%;
+    border-collapse:collapse;
+    margin-top:30px;
+}
+thead th{
+    background:#f4f4f4;
+    border-bottom:2px solid #666;
+    padding:9px 8px;
+    text-align:left;
+    font-size:13px;
+    text-transform:uppercase;
+    letter-spacing:0.04em;
+    color:#444;
+}
+th.hours-header{
+    text-align:right;
+}
+tbody td{
+    padding:8px;
+    border-bottom:1px solid #ddd;
+    line-height:1.4;
+}
+tbody tr:nth-child(even):not(.daily-total){
+    background:#fafafa;
+}
+td.date-cell{
+    font-weight:600;
+}
+td.hours{
+    text-align:right;
+    font-family:Consolas,monospace;
+}
+/* DAILY TOTAL */
+.daily-total{
+    background:#e6e6e6;
+    font-weight:600;
+    border-top:2px solid #444;
+    border-bottom:2px solid #444;
+    border-left:3px solid #888;
+}
+/* GRAND TOTAL */
+.total-row td{
+    border-top:2px solid #444;
+    font-weight:bold;
+    font-size:16px;
+    padding:10px 8px;
+}
+/* SIGNATURE */
+.signature-block{
+    margin-top:45px;
+}
+.signature-line{
+    display:flex;
+    align-items:flex-end;
+    gap:16px;
+    margin-bottom:24px;
+}
+.signature-line label{
+    font-weight:600;
+    white-space:nowrap;
+    min-width:160px;
+}
+.signature-line .sig-field{
+    flex:1;
+    border-bottom:1px solid #444;
+    height:22px;
+}
+.signature-line .date-field{
+    border-bottom:1px solid #444;
+    height:22px;
+    width:120px;
+}
+.signature-line .date-label{
+    font-weight:600;
+    white-space:nowrap;
+}
+/* FOOTER */
+.footer{
+    margin-top:35px;
+    padding-top:10px;
+    border-top:1px solid #ccc;
+    font-size:12px;
+    color:#777;
+}
+/* PRINT RULES */
+@media print {
+    /* FIX 1: Use @page for reliable page margins instead of body margin */
+    @page {
+        margin: 20mm;
+    }
+    body {
+        margin: 0;
+    }
+
+    /* FIX 2: Repeat table header on every printed page */
+    thead {
+        display: table-header-group;
+    }
+
+    /* FIX 3: Ensure all table background colors print */
+    table, thead th, tbody td, .daily-total {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    /* Prevent orphaned/widowed rows at page breaks */
+    table {
+        orphans: 3;
+        widows: 3;
+    }
+
+    /* Page numbers via CSS counters */
+    @page {
+        @bottom-right {
+            content: "Page " counter(page) " of " counter(pages);
+            font-size: 11px;
+            color: #777;
+            font-family: "Segoe UI", Arial, sans-serif;
+        }
+    }
+
+    /* FIX 4: Keep individual rows together */
+    tr {
+        page-break-inside: avoid;
+    }
+
+    /* FIX 5: Keep daily total attached to its day's shifts — don't push it to a new page alone */
+    .daily-total {
+        page-break-before: avoid;
+    }
+
+    /* FIX 6: Keep signature block from splitting across pages */
+    .signature-block {
+        page-break-inside: avoid;
+    }
+
+    /* FIX 7: Normal flow footer — fixed positioning causes it to overlap content in print */
+    .footer {
+        position: static;
+        margin-top: 35px;
+        padding-top: 10px;
+        border-top: 1px solid #ccc;
+        font-style: italic;
+        font-weight: lighter;
+    }
+}
+</style>
+<script>
+window.onload = () => {
+    window.print();
+};
+window.onafterprint = () => {
+    window.history.back();
+};
+</script>
+</head>
+<body>
+<div class="report-header">
+<div class="logo">
+<img src="/static/logo.png" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+<div class="logo-fallback" style="display:none;font-size:18px;font-weight:700;letter-spacing:0.03em;">Your Company</div>
+<div class="report-title">Employee Hours Report</div>
+</div>
+</div>
+<div class="report-meta">
+<div>
+<strong>Employee:</strong> {{ employee_name }}<br>
+<strong>Employee ID:</strong> {{ employee_id }}
+</div>
+<div>
+<strong>Report Period:</strong> {{ start_date }} &ndash; {{ end_date }}<br>
+<strong>Generated:</strong> {{ generated }}<br>
+</div>
+</div>
+<table>
+<thead>
+<tr>
+<th>Date</th>
+<th>Clock In</th>
+<th>Clock Out</th>
+<th class="hours-header">Hours</th>
+</tr>
+</thead>
+<tbody>
+{% for day in days %}
+{% for shift in day.shifts %}
+<tr>
+<td class="date-cell">{{ day.date }}</td>
+<td>{{ shift.clock_in }}</td>
+<td>{{ shift.clock_out }}</td>
+<td class="hours">{{ shift.hours }}</td>
+</tr>
+{% endfor %}
+<tr class="daily-total">
+<td colspan="3">Daily Total</td>
+<td class="hours">{{ day.total }}</td>
+</tr>
+{% endfor %}
+<tr class="total-row">
+<td colspan="3">Total Hours</td>
+<td class="hours">{{ total_hours }}</td>
+</tr>
+</tbody>
+</table>
+<div class="signature-block">
+<p><strong>Employee Acknowledgment:</strong><br>I acknowledge that I have reviewed this report and confirm that the hours and information recorded are accurate to the best of my knowledge.</p>
+<div class="signature-line">
+  <label>Employee Signature:</label>
+  <div class="sig-field"></div>
+  <span class="date-label">Date:</span>
+  <div class="date-field"></div>
+</div>
+<div class="signature-line">
+  <label>Manager Approval:</label>
+  <div class="sig-field"></div>
+  <span class="date-label">Date:</span>
+  <div class="date-field"></div>
+</div>
+</div>
+<div class="footer">
+Auto-generated report requested by {{ requester }}.
+</div>
+</body>
+</html>

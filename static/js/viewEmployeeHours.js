@@ -12,6 +12,47 @@ import {
 socket.on('toast_message', function(data) {
     showToast(data.category, data.message);
 });
+socket.on('alert_message', function(data) {
+    showAlert(data.title, data.body, data.footer, data.category, data.start_date, data.end_date);
+});
+
+function showAlert(title, body, footer = null, type = "info", start_date = null, end_date = null) {
+    Swal.fire({
+        icon: type,
+        title: title,
+        html: body,
+        footer: footer,
+        didRender: () => {
+            const btn = document.getElementById('copyReportBtn');
+            const reportBox = document.getElementById('reportBox');
+
+            if (btn && reportBox) {
+                btn.addEventListener('click', () => {
+                    const text = `Clock-ins from ${start_date} to ${end_date}:\n` + reportBox.innerText;
+                    navigator.clipboard.writeText(text).then(() => {
+                        // swap icon to checkmark
+                        btn.innerHTML = `
+                            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="28" fill="currentColor" class="bi bi-check" viewBox="0 0 16 12">
+                                <path d="M13.485 1.929a.75.75 0 0 1 1.06 1.06l-8.25 8.25a.75.75 0 0 1-1.06 0l-4.25-4.25a.75.75 0 1 1 1.06-1.06L6 9.439l7.485-7.51z"/>
+                            </svg>
+                        `;
+                        btn.title = 'Copied!';
+                        // revert back after 1.5s
+                        setTimeout(() => {
+                            btn.innerHTML = `
+                            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="28" fill="currentColor" class="bi bi-copy" viewBox="0 0 16 16">
+                                <path fill-rule="evenodd" d="M4 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2zm2-1a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1zM2 5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1v-1h1v1a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h1v1z"/>
+                            </svg>
+                            `;
+                            btn.title = 'Copy';
+                        }, 1500);
+                    });
+                });
+            }
+        }
+    });
+}
+
 
 function showToast(type = "success", message, duration = 3000) {
     const Toast = Swal.mixin({
@@ -31,6 +72,96 @@ function showToast(type = "success", message, duration = 3000) {
         title: message
     });
 }
+
+// check if admin session is already verified
+async function isAdminVerified() {
+    try {
+        const response = await fetch('/admin/is_admin_verified', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`Server responded with ${response.status}`);
+        }
+
+        const data = await response.json();
+        const isValid = data.isValid;
+        console.log('Admin verified:', isValid);
+        return isValid;
+
+    } catch (error) {
+        console.error('Error checking admin session:', error);
+        return false;
+    }
+}
+
+function verifyAdminPassword(password) {
+    const employee_name = document.getElementById("username").value;
+    return fetch('/admin/verify-admin-password', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                username: employee_name,
+                password: password,
+                cookie: false
+            }) // Use actual admin username
+        })
+        .then(response => response.json())
+        .then(data => data.isValid);
+}
+
+function promptAdminVerification() {
+    console.log("Initiating device authorization");
+
+    const bootstrapAlert = Swal.mixin({
+        customClass: {
+            confirmButton: "btn btn-success ml-2",
+            cancelButton: "btn btn-danger",
+        },
+        buttonsStyling: true,
+    });
+
+    return new Promise((resolve) => {
+        bootstrapAlert.fire({
+            title: "Verification Required",
+            text: "You must verify your password before completing this action.",
+            icon: "warning",
+            input: 'password',
+            inputPlaceholder: 'Enter your password',
+            inputAttributes: {
+                autocapitalize: 'off',
+                autocorrect: 'off'
+            },
+            confirmButtonText: "Verify",
+            cancelButtonText: "Cancel",
+            showCancelButton: true,
+            confirmButtonColor: "#3085d6",
+            cancelButtonColor: "#d33",
+        }).then((result) => {
+            if (result.isConfirmed && result.value) {
+                const password = result.value;
+                verifyAdminPassword(password).then(isValid => {
+                    if (isValid) {
+                        showToast('success', 'Verification Successful');
+                        resolve(true); // Authorization successful
+                    } else {
+                        showToast('error', 'Verification Failed');
+                        resolve(false); // Authorization failed
+                    }
+                });
+            } else {
+                console.log("Device authorization cancelled");
+                resolve(false); // Cancelled by user
+            }
+        });
+    });
+}
+
 
 $(document).ready(function() {
 
@@ -144,8 +275,53 @@ $(document).ready(function() {
         return `${year}-${month}-${day}T${formattedHour}:${minute}`;
     }
 
-    $('#editHoursButton').click(function(e) {
+    $('#summarizeHoursButton').click(function(e) {
         e.preventDefault();
+
+        const startDate = $('#datePickerStart').val();
+        const endDate = $('#datePickerTo').val();
+
+        if (startDate && endDate) {
+            $.ajax({
+                url: `/admin/get_hours_summary?start_date=${startDate}&end_date=${endDate}`,
+                type: 'GET'
+            });
+        }
+
+    });
+
+$('#generateReportPDF').click(function(e) {
+
+    e.preventDefault();
+
+    const startDate = $('#datePickerStart').val();
+    const endDate = $('#datePickerTo').val();
+    const employeeData = $('.employeeIdSelect').select2('data')[0];
+    const requesterName = $('#username').val();
+
+    if (!employeeData) {
+        showToast('warning', 'Please select an employee');
+        return;
+    }
+
+    const empID = employeeData.id;
+
+    const url =
+        `/admin/print_employee_report?employee_id=${empID}&start_date=${startDate}&end_date=${endDate}&req_name=${requesterName}`;
+
+    window.location.href = url;
+
+});
+
+    $('#editHoursButton').click(async function(e) {
+        e.preventDefault();
+        const alreadyVerified = await isAdminVerified();
+        if (!alreadyVerified) {
+            const authorized = await promptAdminVerification();
+            if (!authorized) {
+                return; // Exit if verification failed or cancelled
+            }
+        }
 
         if ($(this).text() === 'Modify Hours') {
             // Enable inputs for editing

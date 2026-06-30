@@ -81,11 +81,11 @@
                 <span class="ms-1 d-none d-sm-inline">Employee Dashboard</span>
               </a>
             </li>
-            <li>
+            <!-- <li>
               <a href="{{ url_for('change_password') }}" class="nav-link px-sm-0 px-2">
                 <i class="fs-5 fa fa-key"></i>
                 <span class="ms-1 d-none d-sm-inline">Change password</span></a>
-            </li>
+            </li> -->
             {% if session.get("is_admin") %}
             <li class="dropdown">
               <a href="#" class="nav-link dropdown-toggle px-sm-0 px-1" id="dropdown" data-bs-toggle="dropdown" aria-expanded="false">
@@ -94,11 +94,11 @@
               </a>
               <ul class="dropdown-menu dropdown-menu-dark text-small shadow" aria-labelledby="dropdown">
                 <li>
-                  <a class="dropdown-item" href="#">Add/Modify Employee</a>
+                  <a class="dropdown-item" href="{{ url_for('manage_employees') }}">Add/Modify Employee</a>
                 </li>
-                <li>
+                <!-- <li>
                   <a class="dropdown-item" href="{{ url_for('manage_clock_ins') }}">View All Hours</a>
-                </li>
+                </li> -->
                 <li>
                   <a class="dropdown-item" href="{{ url_for('view_employee_hours') }}">View/Modify Employee Hours</a>
                 </li>

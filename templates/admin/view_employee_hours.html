@@ -45,6 +45,8 @@
 
 <!-- Dark mode toggle -->
 <h1 class="mt-5 pb-3">View Employee Hours</h1>
+<input type="hidden" id="username" name="username" value="{{ session['username'] }}" />
+<input type="hidden" id="employee_id" name="employee_id" value="{{ session['user_id'] }}" />
 <div class="card row">
   <div class="card-body">
     <form id="clear">
@@ -73,7 +75,15 @@
           <!-- Buttons automatically align at the bottom due to flex-column -->
           <button type="button" id="editHoursButton" class="btn mt-4 btn-fade btn-danger" disabled>Modify Hours</button> <!-- mt-4 to ensure it aligns visually with inputs above -->
         </div>
-
+        <!-- Fetch and Modify Buttons -->
+        <div class="d-flex flex-column align-items-start ms-2 mb-3" id="btnModifyHours">
+          <!-- Buttons automatically align at the bottom due to flex-column -->
+          <button type="button" id="summarizeHoursButton" class="btn mt-4 btn-info">Generate Summary</button> <!-- mt-4 to ensure it aligns visually with inputs above -->
+        </div>
+        <div class="d-flex flex-column align-items-start ms-2 mb-3" id="btnModifyHours">
+          <!-- Buttons automatically align at the bottom due to flex-column -->
+          <button type="button" id="generateReportPDF" class="btn mt-4 btn-info">Generate Report</button> <!-- mt-4 to ensure it aligns visually with inputs above -->
+        </div>
       </div>
     </form>
   </div>

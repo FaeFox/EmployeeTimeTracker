@@ -459,7 +459,8 @@ function verifyAdminPassword(password) {
             },
             body: JSON.stringify({
                 username: employee_name,
-                password: password
+                password: password,
+                cookie: true
             }) // Use actual admin username
         })
         .then(response => response.json())
